@@ -1,0 +1,86 @@
+{
+  "v2": {
+    "transposit": {
+      "dependencies": [{
+        "name": "transposit/aws_dynamodb:v4.*.*",
+        "alias": "aws_dynamodb"
+      }],
+      "operations": [{
+        "id": "webhook",
+        "function": {
+          "parameters": [{
+            "name": "http_event",
+            "default": {
+              "text": "{   \"query_parameters\": {     \"api_key\": \"XXX\"   },   \"http_method\": \"POST\",   \"parsed_body\": {     \"channel_name\": \"XXX\",     \"user_id\": \"UXXX\",     \"user_name\": \"iggy\",     \"trigger_id\": \"XXX\",     \"team_domain\": \"my_domain\",     \"team_id\": \"TXXX\",     \"text\": \"\",     \"channel_id\": \"DXXX\",     \"command\": \"/test\",     \"token\": \"XXX\",     \"response_url\": \"https://hooks.slack.com/commands/TXXX/XXX/XXX\"   },   \"body\": \"token=XXX&team_id=TXXX&team_domain=my_domain&channel_id=DXXX&channel_name=XXX&user_id=UXXX&user_name=iggy&command=%2Ftest&text=&response_url=https%3A%2F%2Fhooks.slack.com%2Fcommands%2FTXXX%2FXXX%2FXXX&trigger_id=XXX\" }"
+            },
+            "type": "OBJECT"
+          }],
+          "js": "webhook.js",
+          "lang": "js"
+        },
+        "access": {
+          "requireApiKey": true,
+          "webhook": true
+        }
+      }, {
+        "id": "scan_index",
+        "tql": {
+          "tql": "SELECT * FROM aws_dynamodb.scan\n  WHERE $body=(SELECT {\n  \n    'IndexName' : 'Email-index',\n    'TableName' : 'vue_orders'\n  })\n  LIMIT 10\n\n/*\n * For sample code and reference material, visit\n * https://www.transposit.com/docs/get-started/sql-quickstart\n */"
+        }
+      }, {
+        "id": "scan_table",
+        "tql": {
+          "tql": "SELECT * FROM aws_dynamodb.scan\n  WHERE $body=(SELECT {\n    'TableName' : 'vue_orders',\n   \n  })\n  LIMIT 10\n\n/*\n * For sample code and reference material, visit\n * https://www.transposit.com/docs/get-started/sql-quickstart\n */"
+        }
+      }, {
+        "id": "query_on_email",
+        "tql": {
+          "tql": "SELECT * FROM aws_dynamodb.query\n  WHERE $body=(SELECT {\n    'IndexName' : 'Email-index',\n    'TableName' : 'vue_orders',\n    'KeyConditionExpression' : 'Email = :email',\n    'ExpressionAttributeValues' : {\n               ':email':{\"S\":\"johndo@gmail.com\"}\n               \n               }\n  })\n  LIMIT 10\n\n/*\n * For sample code and reference material, visit\n * https://www.transposit.com/docs/get-started/sql-quickstart\n */"
+        }
+      }, {
+        "id": "query_on_backer_id",
+        "tql": {
+          "tql": "SELECT * FROM aws_dynamodb.query\n  WHERE $body=(SELECT {\n\n    'TableName' : 'vue_orders',\n    'KeyConditionExpression' : 'BackerID = :backer_id and ItemNumber = :item_number',\n    'ExpressionAttributeValues' : {\n               ':backer_id':{\"N\":\"6413203\"},\n               ':item_number' : {\"N\":\"1\"}\n               }\n  })\n  LIMIT 10\n\n/*\n * For sample code and reference material, visit\n * https://www.transposit.com/docs/get-started/sql-quickstart\n */"
+        }
+      }],
+      "dataConnections": [{
+        "ref": "slack_identify.raw",
+        "overrides": {
+          "swagger": {
+            "oauthConfig": {
+              "scope": "identity.basic"
+            },
+            "executionLimits": {
+            }
+          }
+        },
+        "title": "Slack",
+        "description": "Used to identify you on Slack"
+      }, {
+        "ref": "slack_bot.raw",
+        "overrides": {
+          "swagger": {
+            "oauthConfig": {
+              "scope": "chat:write:bot"
+            },
+            "executionLimits": {
+            }
+          }
+        }
+      }, {
+        "ref": "slack.raw"
+      }, {
+        "ref": "aws_dynamodb",
+        "overrides": {
+          "aws": {
+            "region": "us-west-2",
+            "executionLimits": {
+            }
+          }
+        }
+      }],
+      "javascriptAPIVersion": "3",
+      "source": "src"
+    }
+  }
+}
